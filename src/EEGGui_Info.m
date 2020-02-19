@@ -21,7 +21,8 @@ classdef EEGGui_Info < handle
             
             this.infoLabel = uicontrol(this.fig,'Style','text');
             this.infoLabel.HorizontalAlignment = 'left';
-            this.infoLabel.String = sprintf('%s\n%s',this.artifactInfo(),this.burstSuppInfo());
+            disp(this.fileInfo());
+            this.infoLabel.String = sprintf('%s\n%s\n%s',this.fileInfo(),this.artifactInfo(),this.burstSuppInfo());
             this.infoLabel.Position=this.infoLabel.Extent;
             this.fig.Visible='on';
         end
@@ -41,6 +42,17 @@ classdef EEGGui_Info < handle
             
         end
         
+        function text = fileInfo(this)
+            dataname = this.gui.dataname;
+            filename = this.gui.filename;
+            filepath = this.gui.filepath;
+            disp(dataname);
+            disp(filename);
+            disp(filepath);
+            text = sprintf('Data: %s \n',dataname);
+            text = sprintf('%sFile: %s \n', text, filename);
+            text = sprintf('%sPath: %s \n',text, [filepath,filename]);
+        end
         
         function text = burstSuppInfo(this)
             data = this.gui.data(:,1);

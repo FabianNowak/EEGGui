@@ -108,6 +108,7 @@ classdef EEGGui_SelectData <handle
         
         function okpressed(this,~)
            attrpath = this.attrpaths{this.datadropdown.Value};
+           attrpath_string = this.strings{this.datadropdown.Value};
            startstr = this.startfield.String;
            endstr = this.endfield.String;
            if ~this.gui.is_timestamp(startstr)||~this.gui.is_timestamp(endstr)
@@ -116,13 +117,13 @@ classdef EEGGui_SelectData <handle
            if this.srdropdown.Value==1
               sr = str2double(this.customfield.String);
               if ~isnan(sr)
-                  this.gui.load_data(attrpath,true,sr,startstr,endstr);
+                  this.gui.load_data(attrpath,attrpath_string,true,sr,startstr,endstr);
                   close(this.fig);
               end
            else
                sr = this.attrpaths{this.srdropdown.Value-1};
                close(this.fig);
-               this.gui.load_data(attrpath,false,sr,startstr,endstr);
+               this.gui.load_data(attrpath,attrpath_string,false,sr,startstr,endstr);
            end
         end
         

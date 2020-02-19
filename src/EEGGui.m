@@ -1,4 +1,4 @@
-classdef EEGGui <handle
+classdef EEGGui < handle
     
     properties %Parameters for dsa
         dsa_segment_offset = 0.5;
@@ -13,6 +13,9 @@ classdef EEGGui <handle
         data = [];
         ampArtifactVector = [];
         clipArtifactVector = [];
+        filename = [];
+        filepath = [];
+        dataname = [];
         
         lowClipInds=[];
         highClipInds=[];
@@ -124,7 +127,7 @@ classdef EEGGui <handle
             toggleToolInsertColorbar.OffCallback = @(~,evt) this.set_colorbar(evt,'off');
             toggleToolInsertColorbar.ClickedCallback = [];
             figMenuAnalyze = uimenu(this.fig,'Text','Analyze','Tag','figMenuAnalyze');
-            figMenuQuality = uimenu(figMenuAnalyze,'Text','Quality Info','Tag','figMenuQuality');
+            figMenuQuality = uimenu(figMenuAnalyze,'Text','Data/Quality Info','Tag','figMenuQuality');
             figMenuQuality.Callback = @(~,evt) EEGGui_Info(this);
             
             %Insert "Analyze" in front of "Tools"
@@ -234,8 +237,7 @@ classdef EEGGui <handle
             this.clipping_checkbox.Callback = @(~,evt) on_clipping_toggle(this,evt);
             this.clipping_checkbox.BackgroundColor = [0.87,0.87,0.87];
             
-            this.infoButton = uicontrol(this.rightpanel,'Style','pushbutton');
-            this.infoButton.String = 'Quality Info';
+            this.infoButton = uicontrol(this.rightpanel,'Style','pushbutton','String','Data/Quality Info');
             this.infoButton.Callback = @(~,evt) EEGGui_Info(this);
             
             EEGGui_register_plots(this);
@@ -379,7 +381,7 @@ classdef EEGGui <handle
             %infoButton
             ibx = 20;
             iby = ccy+cch+20;
-            ibw = this.infoButton.Position(3);
+            ibw = this.infoButton.Position(3)*2;
             ibh = this.infoButton.Position(4);
             this.set_pos(this.infoButton,ibx,iby,ibw,ibh);
             
@@ -801,6 +803,9 @@ classdef EEGGui <handle
             this.filecontent = matfile(full);
             varnames = this.read_varnames({},this.filecontent);
             EEGGui_SelectData(this,varnames);
+            this.filename = file;
+            this.filepath = path;
+            this.fig.Name = ['EEGGui: ',file, ' (', path,file,')'];
         end
         
         function out = read_varnames(this,rootpath,var)
@@ -840,8 +845,9 @@ classdef EEGGui <handle
         
         
         
-        function load_data(this,varpath,srIsCustom,sr,startstr,endstr)
+        function load_data(this,varpath,varpath_string,srIsCustom,sr,startstr,endstr)
             this.data = this.retrieve_data(varpath);
+            this.dataname = varpath_string;
             dialog = waitbar(0,'Loading EEG...','windowstyle','modal');
             this.data = this.data(:,1);%Only Channel 1
             if srIsCustom==true
@@ -863,6 +869,7 @@ classdef EEGGui <handle
             this.data = this.data(startInd:endInd);
             
             
+            waitbar(0.05,dialog,'Finding Artifacts...','windowstyle','modal');
             this.ampArtTH_field.String='100';
             this.findArtifacts(100);
             this.min_clip_size = max(2,round(0.05*this.sr));
@@ -915,12 +922,10 @@ classdef EEGGui <handle
                 artifacts = abs(this.data)>th;
                 combined = sum(artifacts,2)>0;
                 indices = find(combined);
-                for i = indices'
-                    from = -margin+i;
-                    to = margin+i;
-                    from = max(1,from);
-                    to = min(length(this.ampArtifactVector),to);
-                    this.ampArtifactVector(from:to) = nan; 
+                all = zeros(length(indices)*(2*margin+1),1);
+                for i = 0 : 2*margin
+                    clamped = max(1,min(length(this.ampArtifactVector),indices+(i-margin)));
+                    this.ampArtifactVector(clamped) = nan;
                 end
             end
         end
